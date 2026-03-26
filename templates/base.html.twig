@@ -1,17 +1,71 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
-
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventApp{% endblock %} — ISSAT</title>
+    {# Tailwind CSS via CDN — en production, installer via npm #}
+    <script src="https://cdn.tailwindcss.com"></script>
+    {% block stylesheets %}{% endblock %}
+</head>
+<body class="bg-gray-50 min-h-screen">
+ 
+    {# Barre de navigation #}
+    <nav class="bg-blue-900 text-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+            <a href="{{ path('app_events_index') }}" class="text-xl font-bold tracking-wide">
+                EventApp
+            </a>
+            <div class="flex items-center gap-3">
+                <a href="{{ path('app_events_index') }}" class="hover:text-blue-200 transition">Evenements</a>
+ 
+                {# Afficher selon le role de l'utilisateur connecte #}
+                {% if is_granted('ROLE_ADMIN') %}
+                    <a href="{{ path('admin_dashboard') }}"
+                       class="bg-yellow-500 hover:bg-yellow-400 px-3 py-1 rounded text-sm font-medium transition">
+                        Administration
+                    </a>
+                {% endif %}
+ 
+                {% if app.user %}
+                    <span class="text-blue-300 text-sm">{{ app.user.email }}</span>
+                    <a href="{{ path('app_logout') }}"
+                       class="bg-red-600 hover:bg-red-500 px-3 py-1 rounded text-sm transition">
+                        Deconnexion
+                    </a>
+                {% else %}
+                    <a href="{{ path('app_login') }}"
+                       class="bg-white text-blue-900 hover:bg-blue-100 px-3 py-1 rounded text-sm font-medium transition">
+                        Connexion
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+ 
+    {# Messages flash — affiches une seule fois apres une action #}
+    <div class="max-w-6xl mx-auto px-4 mt-4">
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="p-4 mb-3 rounded-lg
+                    {% if label == 'success' %}bg-green-100 border border-green-400 text-green-800
+                    {% elseif label == 'error' %}bg-red-100 border border-red-400 text-red-800
+                    {% else %}bg-blue-100 border border-blue-400 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+ 
+    {# Contenu principal — chaque template remplit ce bloc #}
+    <main class="max-w-6xl mx-auto px-4 py-8">
         {% block body %}{% endblock %}
-    </body>
+    </main>
+ 
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 mt-12">
+        EventApp — ISSAT Sousse 2025-2026
+    </footer>
+ 
+    {% block javascripts %}{% endblock %}
+</body>
 </html>

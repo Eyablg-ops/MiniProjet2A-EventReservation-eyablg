@@ -1,0 +1,59 @@
+{# templates/events/index.html.twig #}
+{% extends 'base.html.twig' %}
+ 
+{% block title %}Evenements disponibles{% endblock %}
+ 
+{% block body %}
+<div class="flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">Evenements disponibles</h1>
+    <span class="text-gray-500">{{ events|length }} evenement(s)</span>
+</div>
+ 
+{% if events is empty %}
+    <div class="text-center py-16 text-gray-500">
+        <p class="text-xl">Aucun evenement disponible pour l'instant.</p>
+    </div>
+{% else %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for event in events %}
+        <div class="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden">
+            {# Image de l'evenement (si elle existe) #}
+            {% if event.image %}
+                <img src="{{ event.image }}" alt="{{ event.title }}"
+                     class="w-full h-48 object-cover">
+            {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-blue-400 to-purple-600
+                            flex items-center justify-center">
+                    <span class="text-white text-4xl">📅</span>
+                </div>
+            {% endif %}
+ 
+            <div class="p-5">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">{{ event.title }}</h2>
+                <p class="text-blue-600 text-sm mb-1">📅 {{ event.date|date('d/m/Y a H:i') }}</p>
+                {% if event.location %}
+                    <p class="text-gray-500 text-sm mb-2">📍 {{ event.location }}</p>
+                {% endif %}
+                {% if event.description %}
+                    <p class="text-gray-600 text-sm mb-4">
+                        {{ event.description|slice(0,120) }}{% if event.description|length > 120 %}...{% endif %}
+                    </p>
+                {% endif %}
+ 
+                <div class="flex items-center justify-between mt-4">
+                    {% if event.seats %}
+                        <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                            {{ event.seats - event.reservations|length }} place(s) restante(s)
+                        </span>
+                    {% endif %}
+                    <a href="{{ path('app_events_show', {id: event.id}) }}"
+                       class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition">
+                        Voir les details
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}

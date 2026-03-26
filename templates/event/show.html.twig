@@ -1,0 +1,80 @@
+{# templates/events/show.html.twig #}
+{% extends 'base.html.twig' %}
+ 
+{% block title %}{{ event.title }}{% endblock %}
+ 
+{% block body %}
+<div class="max-w-3xl mx-auto">
+    <a href="{{ path('app_events_index') }}" class="text-blue-600 hover:underline mb-4 inline-block">
+        ← Retour aux evenements
+    </a>
+ 
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        {% if event.image %}
+            <img src="{{ event.image }}" alt="{{ event.title }}" class="w-full h-64 object-cover">
+        {% endif %}
+ 
+        <div class="p-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">{{ event.title }}</h1>
+ 
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div class="bg-blue-50 p-3 rounded-lg">
+                    <p class="text-xs text-gray-500 uppercase">Date</p>
+                    <p class="font-semibold">{{ event.date|date('d/m/Y') }}</p>
+                    <p class="text-blue-600">{{ event.date|date('H:i') }}</p>
+                </div>
+                {% if event.location %}
+                <div class="bg-green-50 p-3 rounded-lg">
+                    <p class="text-xs text-gray-500 uppercase">Lieu</p>
+                    <p class="font-semibold">{{ event.location }}</p>
+                </div>
+                {% endif %}
+            </div>
+ 
+            {% if event.description %}
+                <div class="mb-6">
+                    <h2 class="text-lg font-semibold mb-2">Description</h2>
+                    <p class="text-gray-600 leading-relaxed">{{ event.description }}</p>
+                </div>
+            {% endif %}
+ 
+            {# Places disponibles #}
+            {% if event.seats %}
+                {% set placesRestantes = event.seats - event.reservations|length %}
+                <div class="mb-6 p-4 rounded-lg {% if placesRestantes > 0 %}bg-green-50{% else %}bg-red-50{% endif %}">
+                    <p class="font-semibold {% if placesRestantes > 0 %}text-green-700{% else %}text-red-700{% endif %}">
+                        {% if placesRestantes > 0 %}
+                            {{ placesRestantes }} place(s) disponible(s) sur {{ event.seats }}
+                        {% else %}
+                            Evenement complet
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+ 
+            {# Bouton de reservation #}
+            {% if is_granted('ROLE_USER') %}
+                {% if event.seats is null or event.reservations|length < event.seats %}
+                    <a href="{{ path('app_reservation_new', {id: event.id}) }}"
+                       class="w-full block text-center bg-blue-600 hover:bg-blue-700 text-white
+                              font-bold py-3 px-6 rounded-xl transition text-lg">
+                        Reserver ma place
+                    </a>
+                {% else %}
+                    <button disabled class="w-full bg-gray-300 text-gray-500 py-3 px-6 rounded-xl cursor-not-allowed">
+                        Evenement complet
+                    </button>
+                {% endif %}
+            {% else %}
+                <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                    <p class="text-yellow-800 mb-3">Connectez-vous pour reserver</p>
+                    <a href="{{ path('app_login') }}"
+                       class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        Se connecter
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
