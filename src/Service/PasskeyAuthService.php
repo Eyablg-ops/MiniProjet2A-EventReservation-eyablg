@@ -102,30 +102,45 @@ class PasskeyAuthService
     /**
      * Verifie la connexion par Passkey et retourne l'utilisateur si ok.
      */
-    public function verifyLogin(string $credentialJson): User
+    public function verifyLogin(array $credentialData): User
     {
-        $data = json_decode($credentialJson, true);
- 
         // Retrouver la credential en BDD a partir de son ID
-        $credentialId = $data['id'] ?? null;
+        $credentialId = $credentialData['id'] ?? null;
         if (!$credentialId) {
             throw new \InvalidArgumentException('Credential ID manquant');
         }
- 
-        // Chercher le credential en BDD
-        $credential = $this->em->getRepository(WebauthnCredential::class)
-            ->findOneBy(['credentialData' => $credentialJson]);
- 
+
+        error_log('Searching for credential ID: ' . $credentialId);
+        
+        // Chercher le credential en BDD en parcourant tous les credentials
+        // et en comparant l'ID de credential
+        $credentials = $this->em->getRepository(WebauthnCredential::class)->findAll();
+        error_log('Total credentials in DB: ' . count($credentials));
+        $credential = null;
+        
+        foreach ($credentials as $cred) {
+            $credData = json_decode($cred->getCredentialData(), true);
+            $storedId = $credData['id'] ?? 'N/A';
+            error_log('Comparing stored ID: ' . $storedId . ' with incoming: ' . $credentialId);
+            
+            if (isset($credData['id']) && $credData['id'] === $credentialId) {
+                $credential = $cred;
+                error_log('Credential FOUND for user: ' . $cred->getUser()->getEmail());
+                break;
+            }
+        }
+
         // En production, tu dois verifier la signature cryptographique ici
         // Pour l'implementation complete, utilise web-auth/webauthn-lib
- 
+
         if (!$credential || !$credential->getUser()) {
+            error_log('Credential NOT FOUND or no user attached');
             throw new \RuntimeException('Passkey non reconnue');
         }
- 
+
         $credential->touch();
         $this->em->flush();
- 
+
         return $credential->getUser();
     }
 }

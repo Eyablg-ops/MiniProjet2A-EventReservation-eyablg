@@ -115,8 +115,11 @@ class AuthApiController extends AbstractController
         $data = json_decode($req->getContent(), true);
         if (!isset($data['credential'])) return $this->json(['error' => 'Credential requis'], 400);
  
+        $credentialId = $data['credential']['id'] ?? 'N/A';
+        error_log('Passkey login - Credential ID: ' . $credentialId);
+        
         try {
-            $user = $svc->verifyLogin(json_encode($data['credential']));
+            $user = $svc->verifyLogin($data['credential']);
             $jwt = $this->jwtManager->create($user);
             return $this->json([
                 'success' => true,
@@ -124,6 +127,7 @@ class AuthApiController extends AbstractController
                 'user' => ['email' => $user->getEmail(), 'roles' => $user->getRoles()]
             ]);
         } catch (\Exception $e) {
+            error_log('Passkey login error: ' . $e->getMessage());
             return $this->json(['error' => $e->getMessage()], 401);
         }
     }

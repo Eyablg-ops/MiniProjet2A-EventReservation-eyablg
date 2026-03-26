@@ -47,6 +47,10 @@
                 class="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2">
             <span>🔑</span> Se connecter avec Passkey
         </button>
+            <button id="passkeyRegisterBtn"
+                    class="w-full border-2 border-green-600 text-green-600 hover:bg-green-50 font-bold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2 mt-3">
+                <span>🛡</span> Enregistrer une Passkey
+            </button>
     </div>
 </div>
 {% endblock %}
@@ -80,6 +84,9 @@ document.getElementById('passkeyLoginBtn').addEventListener('click', async () =>
             }
         };
  
+        console.log('Sending credential ID:', credData.id);
+        console.log('Full credential data:', credData);
+ 
         // 5. Envoyer au serveur pour verification
         const verifyRes = await fetch('/api/auth/passkey/login/verify', {
             method: 'POST',
@@ -97,6 +104,54 @@ document.getElementById('passkeyLoginBtn').addEventListener('click', async () =>
             alert('Erreur : ' + (result.error || 'Connexion echouee'));
         }
     } catch(e) {
+        console.error(e);
+        alert('Passkey non disponible ou annulee. ' + e.message);
+    }
+});
+// Registration WebAuthn (passkey)
+document.getElementById('passkeyRegisterBtn').addEventListener('click', async () => {
+    const email = document.querySelector('input[name="email"]').value.trim();
+    if (!email) {
+        alert('Merci de saisir votre email pour enregistrer une passkey.');
+        return;
+    }
+
+    try {
+        const optRes = await fetch('/api/auth/passkey/register/options', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ email })
+        });
+        const options = await optRes.json();
+
+        options.challenge = Uint8Array.from(atob(options.challenge.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
+        options.user.id = Uint8Array.from(atob(options.user.id), c => c.charCodeAt(0));
+
+        const credential = await navigator.credentials.create({ publicKey: options });
+        const payload = {
+            email,
+            credential: {
+                id: credential.id,
+                rawId: btoa(String.fromCharCode(...new Uint8Array(credential.rawId))),
+                type: credential.type,
+                response: {
+                    clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
+                    attestationObject: btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)))
+                }
+            }
+        };
+
+        const verifyRes = await fetch('/api/auth/passkey/register/verify', {
+            method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)
+        });
+        const result = await verifyRes.json();
+
+        if (result.success) {
+            localStorage.setItem('jwt_token', result.token);
+            alert('Passkey enregistree avec succes !');
+            window.location.href = '/events';
+        } else {
+            alert('Erreur d\'enregistrement : ' + (result.error || 'Echec'));
+        }
+    } catch (e) {
         console.error(e);
         alert('Passkey non disponible ou annulee. ' + e.message);
     }
