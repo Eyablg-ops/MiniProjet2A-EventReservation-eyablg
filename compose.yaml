@@ -1,25 +1,59 @@
 
 services:
-###> doctrine/doctrine-bundle ###
-  database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+  # --- Service PHP ---
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: symfony_php
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
-      # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
-    healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
-      timeout: 5s
-      retries: 5
-      start_period: 60s
+      - APP_ENV=dev
+      - APP_DEBUG=1
+      - JWT_PASSPHRASE=${JWT_PASSPHRASE:-changeme}
+      - APP_DOMAIN=${APP_DOMAIN:-localhost}
+      # La BDD est le service 'db' dans le meme reseau Docker
+      - DATABASE_URL=mysql://app_user:app_password@db:3306/event_reservation?serverVersion=8.0
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
-
+      - .:/var/www              # Monte tout le code source dans le conteneur
+      - ./config/jwt:/var/www/config/jwt
+    depends_on:
+      - db
+    networks:
+      - app_network
+ 
+  # --- Service Nginx ---
+  nginx:
+    image: nginx:alpine
+    container_name: symfony_nginx
+    ports:
+      - '8080:80'               # http://localhost:8080 pointe vers Nginx
+    volumes:
+      - ./public:/var/www/public:ro          # Dossier public en lecture seule
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+    depends_on:
+      - php
+    networks:
+      - app_network
+ 
+  # --- Service MySQL ---
+  db:
+    image: mysql:8.0
+    container_name: symfony_db
+    environment:
+      - MYSQL_DATABASE=event_reservation
+      - MYSQL_USER=app_user
+      - MYSQL_PASSWORD=app_password
+      - MYSQL_ROOT_PASSWORD=root_password
+    volumes:
+      - mysql_data:/var/lib/mysql    # Donnees persistantes (survit aux redemarrages)
+    ports:
+      - '3307:3306'               # Port 3307 sur la machine hote pour ne pas conflictre avec MAMP
+    networks:
+      - app_network
+ 
+networks:
+  app_network:
+    driver: bridge
+ 
 volumes:
-###> doctrine/doctrine-bundle ###
-  database_data:
-###< doctrine/doctrine-bundle ###
+  mysql_data:
