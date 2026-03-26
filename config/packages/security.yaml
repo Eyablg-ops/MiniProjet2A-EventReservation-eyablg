@@ -16,9 +16,40 @@ security:
             # Ensure dev tools and static assets are always allowed
             pattern: ^/(_profiler|_wdt|assets|build)/
             security: false
+        # Zone API publique : pour les routes d'enregistrement Passkey
+        auth_api:
+            pattern: ^/api/auth/(register|login)
+            stateless: true
+            security: false
+
+         # Zone API protegee par JWT
+        api:
+            pattern: ^/api
+            stateless: true   # Pas de session, le JWT suffit
+            jwt: ~            # Utilise LexikJWTAuthenticationBundle
+            entry_point: jwt          # <-- AJOUTER CETTE LIGNE
+
+            refresh_jwt:
+                check_path: /api/token/refresh
+
         main:
             lazy: true
             provider: app_user_provider
+            form_login:
+                login_path: app_login          # Route vers le formulaire de connexion
+                check_path: app_login          # Route qui verifie les identifiants
+                default_target_path: /events   # Redirection apres connexion reussie
+                username_parameter: email      # Nom du champ dans le formulaire
+                password_parameter: password
+                enable_csrf: true
+            logout:
+                path: app_logout
+                # where to redirect after logout
+                # target: app_any_route
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800   # 1 semaine
+
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -30,6 +61,21 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        # Routes completement publiques (pas besoin d'etre connecte)
+        - { path: ^/api/auth/(register|login), roles: PUBLIC_ACCESS }
+        - { path: ^/api/token/refresh, roles: PUBLIC_ACCESS }
+        - { path: ^/login$, roles: PUBLIC_ACCESS }
+        - { path: ^/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/events$, roles: PUBLIC_ACCESS }
+        - { path: ^/events/\d+$, roles: PUBLIC_ACCESS }
+ 
+        # Routes admin uniquement
+        - { path: ^/admin, roles: ROLE_ADMIN }
+ 
+        # Routes utilisateur connecte
+        - { path: ^/reservations/new, roles: ROLE_USER }
+        - { path: ^/api, roles: ROLE_USER }
+
 
 when@test:
     security:
