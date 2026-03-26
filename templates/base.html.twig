@@ -39,6 +39,10 @@
                         Connexion
                     </a>
                 {% endif %}
+                {% if not app.user %}
+                    <a href="{{ path('app_register') }}" class="hover:text-blue-200 transition">S'inscrire</a>
+                    <a href="{{ path('app_login') }}" class="hover:text-blue-200 transition">Connexion</a>
+                {% endif %}
             </div>
         </div>
     </nav>

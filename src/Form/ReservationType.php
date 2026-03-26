@@ -28,6 +28,9 @@ class ReservationType extends AbstractType
                 'label' => 'Votre telephone',
                 'required' => false
             ])
+            ->add('submit', \Symfony\Component\Form\Extension\Core\Type\SubmitType::class, [
+                'label' => 'Réserver'
+            ])
         ;
     }
  

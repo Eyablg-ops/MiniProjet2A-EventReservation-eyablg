@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block body %}
+<h1>Dashboard admin</h1>
+<p><a href="{{ path('admin_event_new') }}">Créer un événement</a></p>
+<table>
+    <thead>
+        <tr><th>ID</th><th>Titre</th><th>Date</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+        {% for event in events %}
+            <tr>
+                <td>{{ event.id }}</td>
+                <td>{{ event.title }}</td>
+                <td>{{ event.date ? event.date|date('d/m/Y H:i') : 'N/A' }}</td>
+                <td>
+                    <a href="{{ path('admin_event_edit', {'id': event.id}) }}">Éditer</a>
+                    <form method="post" action="{{ path('admin_event_delete', {'id': event.id}) }}" style="display:inline;">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ event.id) }}">
+                        <button type="submit">Supprimer</button>
+                    </form>
+                    <a href="{{ path('admin_event_reservations', {'id': event.id}) }}">Réservations</a>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

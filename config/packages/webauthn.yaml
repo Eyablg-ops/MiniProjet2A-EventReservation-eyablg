@@ -1,10 +1,10 @@
 # config/packages/webauthn.yaml
 webauthn:
     # Classe qui gere le stockage des credentials en BDD
-    credential_repository: App\Repository\WebauthnCredentialRepository
+    credential_repository: Webauthn\Bundle\Repository\DummyPublicKeyCredentialSourceRepository
  
     # Classe qui gere les utilisateurs
-    user_repository: App\Repository\UserRepository
+    user_repository: Webauthn\Bundle\Repository\DummyPublicKeyCredentialUserEntityRepository
  
     # Profil pour l'enregistrement d'une nouvelle passkey
     creation_profiles:
@@ -16,10 +16,10 @@ webauthn:
                 id: '%env(APP_DOMAIN)%'
             challenge_length: 32
             timeout: 60000   # 60 secondes pour l'utilisateur
-            authenticator_selection:
+            authenticator_selection_criteria:
                 user_verification: preferred
                 resident_key: preferred
-            attestation: none
+            attestation_conveyance: none
  
     # Profil pour la connexion avec une passkey existante
     request_profiles:

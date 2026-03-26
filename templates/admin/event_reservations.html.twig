@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réservations par événement{% endblock %}
+
+{% block body %}
+<h1>Réservations pour "{{ event.title }}"</h1>
+<table>
+    <thead><tr><th>ID</th><th>Nom</th><th>Email</th><th>Téléphone</th><th>Date</th></tr></thead>
+    <tbody>
+    {% for res in reservations %}
+        <tr><td>{{ res.id }}</td><td>{{ res.name }}</td><td>{{ res.email }}</td><td>{{ res.phone }}</td><td>{{ res.createdAt ? res.createdAt|date('d/m/Y H:i') }}</td></tr>
+    {% else %}
+        <tr><td colspan="5">Aucune réservation.</td></tr>
+    {% endfor %}
+    </tbody>
+</table>
+<a href="{{ path('admin_dashboard') }}">Retour au dashboard</a>
+{% endblock %}

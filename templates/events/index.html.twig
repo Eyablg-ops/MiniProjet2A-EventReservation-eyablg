@@ -1,0 +1,20 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Événements{% endblock %}
+
+{% block body %}
+<h1>Liste des événements</h1>
+
+{% if events is empty %}
+    <p>Aucun événement trouvé.</p>
+{% else %}
+    <ul>
+        {% for event in events %}
+            <li>
+                <a href="{{ path('app_events_show', {'id': event.id}) }}">{{ event.title }}</a>
+                <small>({{ event.date ? event.date|date('d/m/Y H:i') : 'Date non définie' }})</small>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

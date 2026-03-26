@@ -44,7 +44,11 @@ class EventType extends AbstractType
                 'label' => 'URL de l image',
                 'required' => false
             ])
+            ->add('save', \Symfony\Component\Form\Extension\Core\Type\SubmitType::class, [
+                'label' => 'Enregistrer'
+            ])
         ;
+        
     }
  
     public function configureOptions(OptionsResolver $resolver): void
